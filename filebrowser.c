@@ -107,6 +107,7 @@ static gboolean             CONFIG_HIDE_SEARCH          = FALSE;
 static gboolean             CONFIG_HIDE_TOOLBAR         = FALSE;
 static gboolean             CONFIG_DBLCLK_DIR_ADD2PLIST = TRUE;
 static gint                 CONFIG_TREEVIEW_SCROLLPOS   = 0;
+static const gchar *        CONFIG_TREEVIEW_SELECTED    = NULL;
 
 /* Internal variables */
 static DB_misc_t            plugin;
@@ -270,6 +271,8 @@ save_config (void)
         deadbeef->conf_set_str (CONFSTR_FB_COLOR_BG_SEL,    CONFIG_COLOR_BG_SEL);
     if (CONFIG_COLOR_FG_SEL)
         deadbeef->conf_set_str (CONFSTR_FB_COLOR_FG_SEL,    CONFIG_COLOR_FG_SEL);
+    if (CONFIG_TREEVIEW_SELECTED)
+        deadbeef->conf_set_str (CONFSTR_FB_TREEVIEW_SELECTED, CONFIG_TREEVIEW_SELECTED);
 
     if (CONFIG_SAVE_TREEVIEW)
         save_config_expanded_rows ();
@@ -354,6 +357,7 @@ load_config (void)
     CONFIG_COLOR_FG             = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_COLOR_FG,       ""));
     CONFIG_COLOR_BG_SEL         = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_COLOR_BG_SEL,   ""));
     CONFIG_COLOR_FG_SEL         = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_COLOR_FG_SEL,   ""));
+    CONFIG_TREEVIEW_SELECTED    = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_TREEVIEW_SELECTED, ""));
 
     if (CONFIG_SAVE_TREEVIEW)
         load_config_expanded_rows ();
@@ -393,7 +397,8 @@ load_config (void)
         "hide_search:       %d \n"
         "hide_toolbar:      %d \n"
         "dblclk_dir_add2plist: %d \n"
-        "treeview_scrollpos: %d \n",
+        "treeview_scrollpos: %d \n"
+        "treeview_selected: %s \n",
         CONFIG_ENABLED,
         CONFIG_HIDDEN,
         CONFIG_DEFAULT_PATH,
@@ -424,7 +429,8 @@ load_config (void)
         CONFIG_HIDE_SEARCH,
         CONFIG_HIDE_TOOLBAR,
         CONFIG_DBLCLK_DIR_ADD2PLIST,
-        CONFIG_TREEVIEW_SCROLLPOS
+        CONFIG_TREEVIEW_SCROLLPOS,
+        CONFIG_TREEVIEW_SELECTED
         );
 }
 
@@ -2431,6 +2437,8 @@ treebrowser_chroot (gchar *directory)
 static void
 treebrowser_browse_dir (gpointer directory)
 {
+    GtkTreePath *path;
+
     trace("browse directory: %s\n", (gchar*) directory);
 
     //deadbeef->mutex_lock (treebrowser_mutex);
@@ -2445,6 +2453,12 @@ treebrowser_browse_dir (gpointer directory)
 
     treebrowser_load_bookmarks ();
     treeview_restore_expanded (NULL);
+
+    path = gtk_tree_path_new_from_string(CONFIG_TREEVIEW_SELECTED);
+    if (path) {
+        gtk_tree_selection_select_path(gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview)), path);
+        gtk_tree_path_free(path);
+    }
 
     //deadbeef->mutex_unlock (treebrowser_mutex);
 }
@@ -3517,6 +3531,7 @@ static void
 on_treeview_changed (GtkWidget *widget, gpointer user_data)
 {
     gboolean has_selection = FALSE;
+    GtkTreePath *path;
 
     if (gtk_tree_selection_count_selected_rows (GTK_TREE_SELECTION (widget)) > 0)
         has_selection = TRUE;
@@ -3525,6 +3540,12 @@ on_treeview_changed (GtkWidget *widget, gpointer user_data)
         gtk_widget_set_sensitive (GTK_WIDGET (toolbar_button_add), has_selection);
     if (toolbar_button_replace)
         gtk_widget_set_sensitive (GTK_WIDGET (toolbar_button_replace), has_selection);
+
+    gtk_tree_view_get_cursor(GTK_TREE_VIEW(treeview), &path, NULL);
+    if (path) {
+        CONFIG_TREEVIEW_SELECTED = gtk_tree_path_to_string(path);
+        gtk_tree_path_free(path);
+    }
 }
 
 static void

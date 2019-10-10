@@ -61,6 +61,7 @@
 #define     CONFSTR_FB_HIDE_TOOLBAR         "filebrowser.hide_toolbar"
 #define     CONFSTR_FB_DBLCLK_DIR_ADD2PLIST "filebrowser.dblclk_dir_add2plist"
 #define     CONFSTR_FB_TREEVIEW_SCROLLPOS   "filebrowser.treeview_scrollpos"
+#define     CONFSTR_FB_TREEVIEW_SELECTED    "filebrowser.treeview_selected"
 
 #define     DEFAULT_FB_DEFAULT_PATH         ""
 #define     DEFAULT_FB_FILTER               ""  // auto-filter enabled by default

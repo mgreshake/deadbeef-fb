@@ -106,6 +106,7 @@ static gboolean             CONFIG_HIDE_NAVIGATION      = FALSE;
 static gboolean             CONFIG_HIDE_SEARCH          = FALSE;
 static gboolean             CONFIG_HIDE_TOOLBAR         = FALSE;
 static gboolean             CONFIG_DBLCLK_DIR_ADD2PLIST = TRUE;
+static gint                 CONFIG_TREEVIEW_SCROLLPOS   = 0;
 
 /* Internal variables */
 static DB_misc_t            plugin;
@@ -117,6 +118,7 @@ static GtkWidget *          mainmenuitem                = NULL;
 static GtkWidget *          vbox_playlist               = NULL;
 static GtkWidget *          hbox_all                    = NULL;
 static GtkWidget *          treeview                    = NULL;
+static GtkAdjustment *      vscroll_adjustment          = NULL;
 static GtkTreeStore *       treestore                   = NULL;
 static GtkWidget *          sidebar                     = NULL;
 static GtkWidget *          sidebar_searchbox           = NULL;
@@ -250,6 +252,7 @@ save_config (void)
     deadbeef->conf_set_int (CONFSTR_FB_HIDE_SEARCH,         CONFIG_HIDE_SEARCH);
     deadbeef->conf_set_int (CONFSTR_FB_HIDE_TOOLBAR,        CONFIG_HIDE_TOOLBAR);
     deadbeef->conf_set_int (CONFSTR_FB_DBLCLK_DIR_ADD2PLIST,CONFIG_DBLCLK_DIR_ADD2PLIST);
+    deadbeef->conf_set_int (CONFSTR_FB_TREEVIEW_SCROLLPOS, CONFIG_TREEVIEW_SCROLLPOS);
 
     if (CONFIG_DEFAULT_PATH)
         deadbeef->conf_set_str (CONFSTR_FB_DEFAULT_PATH,    CONFIG_DEFAULT_PATH);
@@ -341,6 +344,7 @@ load_config (void)
     CONFIG_HIDE_SEARCH          = deadbeef->conf_get_int (CONFSTR_FB_HIDE_SEARCH,         FALSE);
     CONFIG_HIDE_TOOLBAR         = deadbeef->conf_get_int (CONFSTR_FB_HIDE_TOOLBAR,        FALSE);
     CONFIG_DBLCLK_DIR_ADD2PLIST = deadbeef->conf_get_int (CONFSTR_FB_DBLCLK_DIR_ADD2PLIST, TRUE);
+    CONFIG_TREEVIEW_SCROLLPOS   = deadbeef->conf_get_int (CONFSTR_FB_TREEVIEW_SCROLLPOS, 0);
 
     CONFIG_DEFAULT_PATH         = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_DEFAULT_PATH,   DEFAULT_FB_DEFAULT_PATH));
     CONFIG_FILTER               = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_FILTER,         DEFAULT_FB_FILTER));
@@ -388,7 +392,8 @@ load_config (void)
         "hide_navigation:   %d \n"
         "hide_search:       %d \n"
         "hide_toolbar:      %d \n"
-        "dblclk_dir_add2plist: %d \n",
+        "dblclk_dir_add2plist: %d \n"
+        "treeview_scrollpos: %d \n",
         CONFIG_ENABLED,
         CONFIG_HIDDEN,
         CONFIG_DEFAULT_PATH,
@@ -418,7 +423,8 @@ load_config (void)
         CONFIG_HIDE_NAVIGATION,
         CONFIG_HIDE_SEARCH,
         CONFIG_HIDE_TOOLBAR,
-        CONFIG_DBLCLK_DIR_ADD2PLIST
+        CONFIG_DBLCLK_DIR_ADD2PLIST,
+        CONFIG_TREEVIEW_SCROLLPOS
         );
 }
 
@@ -1245,6 +1251,10 @@ create_sidebar (void)
 #else
     g_signal_connect (searchbar,    "search-changed",       G_CALLBACK (on_searchbar_changed),              NULL);
 #endif
+
+    vscroll_adjustment = gtk_range_get_adjustment(GTK_RANGE(gtk_scrolled_window_get_vscrollbar(GTK_SCROLLED_WINDOW(scrollwin))));
+    g_signal_connect(vscroll_adjustment, "value-changed", G_CALLBACK(on_treeview_scroll), NULL);
+    g_signal_connect(treeview, "visibility-notify-event", G_CALLBACK(on_treeview_visibility_notify), NULL);
 
     gtk_widget_show_all (sidebar);
 
@@ -3565,6 +3575,18 @@ on_treeview_row_collapsed (GtkWidget *widget, GtkTreeIter *iter,
     }
 
     g_free (uri);
+}
+
+static void
+on_treeview_scroll (GtkWidget *widget, gpointer user_data)
+{
+	CONFIG_TREEVIEW_SCROLLPOS = gtk_adjustment_get_value (GTK_ADJUSTMENT(widget));
+}
+
+static void
+on_treeview_visibility_notify (GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+    gtk_adjustment_set_value (vscroll_adjustment, CONFIG_TREEVIEW_SCROLLPOS);
 }
 
 

@@ -60,6 +60,7 @@
 #define     CONFSTR_FB_HIDE_SEARCH          "filebrowser.hide_search"
 #define     CONFSTR_FB_HIDE_TOOLBAR         "filebrowser.hide_toolbar"
 #define     CONFSTR_FB_DBLCLK_DIR_ADD2PLIST "filebrowser.dblclk_dir_add2plist"
+#define     CONFSTR_FB_TREEVIEW_SCROLLPOS   "filebrowser.treeview_scrollpos"
 
 #define     DEFAULT_FB_DEFAULT_PATH         ""
 #define     DEFAULT_FB_FILTER               ""  // auto-filter enabled by default
@@ -191,6 +192,8 @@ static gboolean     on_treeview_mousemove (GtkWidget *widget, GdkEventButton *ev
 static void         on_treeview_changed (GtkWidget *widget, gpointer user_data);
 static void         on_treeview_row_expanded (GtkWidget *widget, GtkTreeIter *iter, GtkTreePath *path, gpointer user_data);
 static void         on_treeview_row_collapsed (GtkWidget *widget, GtkTreeIter *iter, GtkTreePath *path, gpointer user_data);
+static void         on_treeview_scroll (GtkWidget *widget, gpointer user_data);
+static void         on_treeview_visibility_notify (GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 static gboolean     treeview_update (void *ctx);
 static gboolean     filebrowser_init (void *ctx);

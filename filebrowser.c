@@ -322,6 +322,8 @@ load_config (void)
         g_free ((gchar*) CONFIG_COLOR_BG_SEL);
     if (CONFIG_COLOR_FG_SEL)
         g_free ((gchar*) CONFIG_COLOR_FG_SEL);
+    if (CONFIG_TREEVIEW_SELECTED)
+        g_free ((gchar*) CONFIG_TREEVIEW_SELECTED);
 
     deadbeef->conf_lock ();
 
@@ -3532,6 +3534,7 @@ on_treeview_changed (GtkWidget *widget, gpointer user_data)
 {
     gboolean has_selection = FALSE;
     GtkTreePath *path;
+    gchar *str;
 
     if (gtk_tree_selection_count_selected_rows (GTK_TREE_SELECTION (widget)) > 0)
         has_selection = TRUE;
@@ -3543,8 +3546,12 @@ on_treeview_changed (GtkWidget *widget, gpointer user_data)
 
     gtk_tree_view_get_cursor(GTK_TREE_VIEW(treeview), &path, NULL);
     if (path) {
-        CONFIG_TREEVIEW_SELECTED = gtk_tree_path_to_string(path);
-        gtk_tree_path_free(path);
+        if (CONFIG_TREEVIEW_SELECTED)
+            g_free ((gchar*) CONFIG_TREEVIEW_SELECTED);
+        str = gtk_tree_path_to_string (path);
+        CONFIG_TREEVIEW_SELECTED = g_strdup(str);
+        g_free (str);
+        gtk_tree_path_free (path);
     }
 }
 

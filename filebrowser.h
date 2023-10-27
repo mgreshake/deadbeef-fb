@@ -59,6 +59,9 @@
 #define     CONFSTR_FB_HIDE_NAVIGATION      "filebrowser.hide_navigation"
 #define     CONFSTR_FB_HIDE_SEARCH          "filebrowser.hide_search"
 #define     CONFSTR_FB_HIDE_TOOLBAR         "filebrowser.hide_toolbar"
+#define     CONFSTR_FB_DBLCLK_DIR_ADD2PLIST "filebrowser.dblclk_dir_add2plist"
+#define     CONFSTR_FB_TREEVIEW_SCROLLPOS   "filebrowser.treeview_scrollpos"
+#define     CONFSTR_FB_TREEVIEW_SELECTED    "filebrowser.treeview_selected"
 
 #define     DEFAULT_FB_DEFAULT_PATH         ""
 #define     DEFAULT_FB_FILTER               ""  // auto-filter enabled by default
@@ -163,6 +166,7 @@ static void         on_menu_use_filter (GtkMenuItem *menuitem, gpointer *user_da
 static void         on_menu_hide_navigation (GtkMenuItem *menuitem, gpointer *user_data);
 static void         on_menu_hide_search (GtkMenuItem *menuitem, gpointer *user_data);
 static void         on_menu_hide_toolbar (GtkMenuItem *menuitem, gpointer *user_data);
+static void         on_menu_dblclk_dir_add2plist (GtkMenuItem *menuitem, gpointer *user_data);
 #if GTK_CHECK_VERSION(3,16,0)
 static void         on_menu_rename (GtkMenuItem *menuitem, GList *uri_list);
 static void         on_menu_config (GtkMenuItem *menuitem, gpointer user_data);
@@ -189,6 +193,8 @@ static gboolean     on_treeview_mousemove (GtkWidget *widget, GdkEventButton *ev
 static void         on_treeview_changed (GtkWidget *widget, gpointer user_data);
 static void         on_treeview_row_expanded (GtkWidget *widget, GtkTreeIter *iter, GtkTreePath *path, gpointer user_data);
 static void         on_treeview_row_collapsed (GtkWidget *widget, GtkTreeIter *iter, GtkTreePath *path, gpointer user_data);
+static void         on_treeview_scroll (GtkWidget *widget, gpointer user_data);
+static void         on_treeview_visibility_notify (GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 static gboolean     treeview_update (void *ctx);
 static gboolean     filebrowser_init (void *ctx);

@@ -105,6 +105,9 @@ static gint                 CONFIG_FULLSEARCH_WAIT      = 5;
 static gboolean             CONFIG_HIDE_NAVIGATION      = FALSE;
 static gboolean             CONFIG_HIDE_SEARCH          = FALSE;
 static gboolean             CONFIG_HIDE_TOOLBAR         = FALSE;
+static gboolean             CONFIG_DBLCLK_DIR_ADD2PLIST = TRUE;
+static gint                 CONFIG_TREEVIEW_SCROLLPOS   = 0;
+static const gchar *        CONFIG_TREEVIEW_SELECTED    = NULL;
 
 /* Internal variables */
 static DB_misc_t            plugin;
@@ -116,6 +119,7 @@ static GtkWidget *          mainmenuitem                = NULL;
 static GtkWidget *          vbox_playlist               = NULL;
 static GtkWidget *          hbox_all                    = NULL;
 static GtkWidget *          treeview                    = NULL;
+static GtkAdjustment *      vscroll_adjustment          = NULL;
 static GtkTreeStore *       treestore                   = NULL;
 static GtkWidget *          sidebar                     = NULL;
 static GtkWidget *          sidebar_searchbox           = NULL;
@@ -248,6 +252,8 @@ save_config (void)
     deadbeef->conf_set_int (CONFSTR_FB_HIDE_NAVIGATION,     CONFIG_HIDE_NAVIGATION);
     deadbeef->conf_set_int (CONFSTR_FB_HIDE_SEARCH,         CONFIG_HIDE_SEARCH);
     deadbeef->conf_set_int (CONFSTR_FB_HIDE_TOOLBAR,        CONFIG_HIDE_TOOLBAR);
+    deadbeef->conf_set_int (CONFSTR_FB_DBLCLK_DIR_ADD2PLIST,CONFIG_DBLCLK_DIR_ADD2PLIST);
+    deadbeef->conf_set_int (CONFSTR_FB_TREEVIEW_SCROLLPOS, CONFIG_TREEVIEW_SCROLLPOS);
 
     if (CONFIG_DEFAULT_PATH)
         deadbeef->conf_set_str (CONFSTR_FB_DEFAULT_PATH,    CONFIG_DEFAULT_PATH);
@@ -265,6 +271,8 @@ save_config (void)
         deadbeef->conf_set_str (CONFSTR_FB_COLOR_BG_SEL,    CONFIG_COLOR_BG_SEL);
     if (CONFIG_COLOR_FG_SEL)
         deadbeef->conf_set_str (CONFSTR_FB_COLOR_FG_SEL,    CONFIG_COLOR_FG_SEL);
+    if (CONFIG_TREEVIEW_SELECTED)
+        deadbeef->conf_set_str (CONFSTR_FB_TREEVIEW_SELECTED, CONFIG_TREEVIEW_SELECTED);
 
     if (CONFIG_SAVE_TREEVIEW)
         save_config_expanded_rows ();
@@ -314,6 +322,8 @@ load_config (void)
         g_free ((gchar*) CONFIG_COLOR_BG_SEL);
     if (CONFIG_COLOR_FG_SEL)
         g_free ((gchar*) CONFIG_COLOR_FG_SEL);
+    if (CONFIG_TREEVIEW_SELECTED)
+        g_free ((gchar*) CONFIG_TREEVIEW_SELECTED);
 
     deadbeef->conf_lock ();
 
@@ -338,6 +348,8 @@ load_config (void)
     CONFIG_HIDE_NAVIGATION      = deadbeef->conf_get_int (CONFSTR_FB_HIDE_NAVIGATION,     FALSE);
     CONFIG_HIDE_SEARCH          = deadbeef->conf_get_int (CONFSTR_FB_HIDE_SEARCH,         FALSE);
     CONFIG_HIDE_TOOLBAR         = deadbeef->conf_get_int (CONFSTR_FB_HIDE_TOOLBAR,        FALSE);
+    CONFIG_DBLCLK_DIR_ADD2PLIST = deadbeef->conf_get_int (CONFSTR_FB_DBLCLK_DIR_ADD2PLIST, TRUE);
+    CONFIG_TREEVIEW_SCROLLPOS   = deadbeef->conf_get_int (CONFSTR_FB_TREEVIEW_SCROLLPOS, 0);
 
     CONFIG_DEFAULT_PATH         = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_DEFAULT_PATH,   DEFAULT_FB_DEFAULT_PATH));
     CONFIG_FILTER               = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_FILTER,         DEFAULT_FB_FILTER));
@@ -347,6 +359,7 @@ load_config (void)
     CONFIG_COLOR_FG             = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_COLOR_FG,       ""));
     CONFIG_COLOR_BG_SEL         = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_COLOR_BG_SEL,   ""));
     CONFIG_COLOR_FG_SEL         = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_COLOR_FG_SEL,   ""));
+    CONFIG_TREEVIEW_SELECTED    = g_strdup (deadbeef->conf_get_str_fast (CONFSTR_FB_TREEVIEW_SELECTED, ""));
 
     if (CONFIG_SAVE_TREEVIEW)
         load_config_expanded_rows ();
@@ -384,7 +397,10 @@ load_config (void)
         "fullsearch_wait:   %d \n"
         "hide_navigation:   %d \n"
         "hide_search:       %d \n"
-        "hide_toolbar:      %d \n",
+        "hide_toolbar:      %d \n"
+        "dblclk_dir_add2plist: %d \n"
+        "treeview_scrollpos: %d \n"
+        "treeview_selected: %s \n",
         CONFIG_ENABLED,
         CONFIG_HIDDEN,
         CONFIG_DEFAULT_PATH,
@@ -413,7 +429,10 @@ load_config (void)
         CONFIG_FULLSEARCH_WAIT,
         CONFIG_HIDE_NAVIGATION,
         CONFIG_HIDE_SEARCH,
-        CONFIG_HIDE_TOOLBAR
+        CONFIG_HIDE_TOOLBAR,
+        CONFIG_DBLCLK_DIR_ADD2PLIST,
+        CONFIG_TREEVIEW_SCROLLPOS,
+        CONFIG_TREEVIEW_SELECTED
         );
 }
 
@@ -1028,6 +1047,11 @@ create_popup_menu (GtkTreePath *path, gchar *name, GList *uri_list)
     gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), CONFIG_HIDE_TOOLBAR);
     g_signal_connect (item, "activate", G_CALLBACK (on_menu_hide_toolbar), NULL);
 
+    item = gtk_check_menu_item_new_with_mnemonic (_("Double click on dir _adds to playlist"));
+    gtk_container_add (GTK_CONTAINER (menu), item);
+    gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (item), CONFIG_DBLCLK_DIR_ADD2PLIST);
+    g_signal_connect (item, "activate", G_CALLBACK (on_menu_dblclk_dir_add2plist), NULL);
+
 #if GTK_CHECK_VERSION(3,16,0)
     // new settings dialog (uses GTK3)
     item = gtk_separator_menu_item_new ();
@@ -1236,6 +1260,10 @@ create_sidebar (void)
     g_signal_connect (searchbar,    "search-changed",       G_CALLBACK (on_searchbar_changed),              NULL);
 #endif
 
+    vscroll_adjustment = gtk_range_get_adjustment(GTK_RANGE(gtk_scrolled_window_get_vscrollbar(GTK_SCROLLED_WINDOW(scrollwin))));
+    g_signal_connect(vscroll_adjustment, "value-changed", G_CALLBACK(on_treeview_scroll), NULL);
+    g_signal_connect(treeview, "visibility-notify-event", G_CALLBACK(on_treeview_visibility_notify), NULL);
+
     gtk_widget_show_all (sidebar);
 
     if (CONFIG_HIDDEN)
@@ -1434,6 +1462,7 @@ create_settings_dialog ()
     GtkWidget *grid_plugin          = gtk_grid_new ();
     GtkWidget *check_enabled        = gtk_check_button_new_with_mnemonic (_("Enable filebrowser _plugin"));
     GtkWidget *check_save_view      = gtk_check_button_new_with_mnemonic (_("_Save tree state (restore expanded/collapsed rows)"));
+    GtkWidget *check_dblclk_dir_add2plist = gtk_check_button_new_with_mnemonic (_("Double click on dir _adds to playlist"));
 
     GtkWidget *frame_layout         = gtk_frame_new (_(" Layout  "));
     GtkWidget *grid_layout          = gtk_grid_new ();
@@ -1502,6 +1531,7 @@ create_settings_dialog ()
 
     gtk_widget_set_tooltip_text (check_enabled,          _("If disabled, the plugin will not be added to the player's interface."));
     gtk_widget_set_tooltip_text (check_save_view,        _("Save expanded paths and restore them whenever the path is visible in the treeview."));
+    gtk_widget_set_tooltip_text (check_dblclk_dir_add2plist, _("Double click on a directory adds it to the playlist."));
     gtk_widget_set_tooltip_text (check_hidden,           _("Hide the complete sidebar with the treeview."));
     gtk_widget_set_tooltip_text (check_hide_nav,         _("Hide the navigation/address bar above the treeview."));
     gtk_widget_set_tooltip_text (check_hide_search,      _("Hide the search bar above the treeview."));
@@ -1611,6 +1641,9 @@ create_settings_dialog ()
 
     // CONFIG_SAVE_TREEVIEW
     gtk_grid_attach (GTK_GRID (grid_plugin), check_save_view, 0, 1, 2, 1);
+
+    // CONFIG_DBLCLK_DIR_ADD2PLIST
+    gtk_grid_attach (GTK_GRID (grid_plugin), check_dblclk_dir_add2plist, 0, 2, 2, 1);
 
     gtk_container_add (GTK_CONTAINER (frame_layout), grid_layout);
     gtk_box_pack_start (GTK_BOX (page1), frame_layout, FALSE, TRUE, 0);
@@ -1778,6 +1811,7 @@ create_settings_dialog ()
         gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check_hide_nav), CONFIG_HIDE_NAVIGATION);
         gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check_hide_search), CONFIG_HIDE_SEARCH);
         gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check_hide_tools), CONFIG_HIDE_TOOLBAR);
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (check_dblclk_dir_add2plist), CONFIG_DBLCLK_DIR_ADD2PLIST);
 
         settings_update_paths (GTK_GRID (grid_paths), g_strdup (CONFIG_DEFAULT_PATH));
 
@@ -1834,6 +1868,7 @@ create_settings_dialog ()
         CONFIG_HIDE_NAVIGATION      = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (check_hide_nav));
         CONFIG_HIDE_SEARCH          = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (check_hide_search));
         CONFIG_HIDE_TOOLBAR         = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (check_hide_tools));
+        CONFIG_DBLCLK_DIR_ADD2PLIST = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (check_dblclk_dir_add2plist));
 
         CONFIG_DEFAULT_PATH         = settings_get_paths (GTK_GRID (grid_paths));
         trace("defpath: %s\n",CONFIG_DEFAULT_PATH);
@@ -2404,6 +2439,8 @@ treebrowser_chroot (gchar *directory)
 static void
 treebrowser_browse_dir (gpointer directory)
 {
+    GtkTreePath *path;
+
     trace("browse directory: %s\n", (gchar*) directory);
 
     //deadbeef->mutex_lock (treebrowser_mutex);
@@ -2418,6 +2455,12 @@ treebrowser_browse_dir (gpointer directory)
 
     treebrowser_load_bookmarks ();
     treeview_restore_expanded (NULL);
+
+    path = gtk_tree_path_new_from_string(CONFIG_TREEVIEW_SELECTED);
+    if (path) {
+        gtk_tree_selection_select_path(gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview)), path);
+        gtk_tree_path_free(path);
+    }
 
     //deadbeef->mutex_unlock (treebrowser_mutex);
 }
@@ -2896,6 +2939,12 @@ on_menu_hide_toolbar (GtkMenuItem *menuitem, gpointer *user_data)
         gtk_widget_show (sidebar_toolbar);
 }
 
+static void
+on_menu_dblclk_dir_add2plist (GtkMenuItem *menuitem, gpointer *user_data)
+{
+    CONFIG_DBLCLK_DIR_ADD2PLIST = gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (menuitem));
+}
+
 #if GTK_CHECK_VERSION(3,16,0)
 static void
 on_menu_rename (GtkMenuItem *menuitem, GList *uri_list)
@@ -3281,8 +3330,19 @@ on_treeview_mouseclick_press (GtkWidget *widget, GdkEventButton *event,
             return TRUE;
         }
 
+        gboolean expandable = FALSE; // TODO
+        if (event->type == GDK_2BUTTON_PRESS)
+        {
+            GtkTreeIter i;
+            if (gtk_tree_model_get_iter (GTK_TREE_MODEL (treestore), &i, path))
+            {
+                expandable = gtk_tree_model_iter_has_child (GTK_TREE_MODEL (treestore), &i);
+            }
+        }
+
         // expand/collapse by single-click on icon/expander
-        if (event->type == GDK_BUTTON_PRESS && column == treeview_column_icon)
+        if ((event->type == GDK_BUTTON_PRESS && column == treeview_column_icon) ||
+        	(CONFIG_DBLCLK_DIR_ADD2PLIST == FALSE && event->type == GDK_2BUTTON_PRESS && expandable))
         {
             // toggle expand/collapse
             if (is_expanded)
@@ -3473,6 +3533,8 @@ static void
 on_treeview_changed (GtkWidget *widget, gpointer user_data)
 {
     gboolean has_selection = FALSE;
+    GtkTreePath *path;
+    gchar *str;
 
     if (gtk_tree_selection_count_selected_rows (GTK_TREE_SELECTION (widget)) > 0)
         has_selection = TRUE;
@@ -3481,6 +3543,16 @@ on_treeview_changed (GtkWidget *widget, gpointer user_data)
         gtk_widget_set_sensitive (GTK_WIDGET (toolbar_button_add), has_selection);
     if (toolbar_button_replace)
         gtk_widget_set_sensitive (GTK_WIDGET (toolbar_button_replace), has_selection);
+
+    gtk_tree_view_get_cursor(GTK_TREE_VIEW(treeview), &path, NULL);
+    if (path) {
+        if (CONFIG_TREEVIEW_SELECTED)
+            g_free ((gchar*) CONFIG_TREEVIEW_SELECTED);
+        str = gtk_tree_path_to_string (path);
+        CONFIG_TREEVIEW_SELECTED = g_strdup(str);
+        g_free (str);
+        gtk_tree_path_free (path);
+    }
 }
 
 static void
@@ -3531,6 +3603,18 @@ on_treeview_row_collapsed (GtkWidget *widget, GtkTreeIter *iter,
     }
 
     g_free (uri);
+}
+
+static void
+on_treeview_scroll (GtkWidget *widget, gpointer user_data)
+{
+	CONFIG_TREEVIEW_SCROLLPOS = gtk_adjustment_get_value (GTK_ADJUSTMENT(widget));
+}
+
+static void
+on_treeview_visibility_notify (GtkWidget *widget, GdkEvent *event, gpointer user_data)
+{
+    gtk_adjustment_set_value (vscroll_adjustment, CONFIG_TREEVIEW_SCROLLPOS);
 }
 
 

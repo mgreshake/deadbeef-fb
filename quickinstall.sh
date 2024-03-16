@@ -1,22 +1,22 @@
 #!/bin/sh
 
 ## Remove old versions
-rm -fv /usr/local/lib/deadbeef/ddb_misc_filebrowser.so*
-rm -fv /usr/local/lib/deadbeef/ddb_misc_filebrowser_GTK2.so*
-rm -fv /usr/local/lib/deadbeef/ddb_misc_filebrowser_GTK3.so*
+rm -fv /usr/lib/deadbeef/ddb_misc_filebrowser.so*
+rm -fv /usr/lib/deadbeef/ddb_misc_filebrowser_GTK2.so*
+rm -fv /usr/lib/deadbeef/ddb_misc_filebrowser_GTK3.so*
 
 ## GTK2 version
 if [ -f ./.libs/ddb_misc_filebrowser_GTK2.so ]; then
-    /usr/bin/install -v -c -m 644 ./.libs/ddb_misc_filebrowser_GTK2.so /usr/local/lib/deadbeef/
+    /usr/bin/install -v -c -m 644 ./.libs/ddb_misc_filebrowser_GTK2.so /usr/lib/deadbeef/
 else
-    /usr/bin/install -v -c -m 644 ./ddb_misc_filebrowser_GTK2.so /usr/local/lib/deadbeef/
+    /usr/bin/install -v -c -m 644 ./ddb_misc_filebrowser_GTK2.so /usr/lib/deadbeef/
 fi
 
 ## GTK3 version
 if [ -f ./.libs/ddb_misc_filebrowser_GTK3.so ]; then
-    /usr/bin/install -v -c -m 644 ./.libs/ddb_misc_filebrowser_GTK3.so /usr/local/lib/deadbeef/
+    /usr/bin/install -v -c -m 644 ./.libs/ddb_misc_filebrowser_GTK3.so /usr/lib/deadbeef/
 else
-    /usr/bin/install -v -c -m 644 ./ddb_misc_filebrowser_GTK3.so /usr/local/lib/deadbeef/
+    /usr/bin/install -v -c -m 644 ./ddb_misc_filebrowser_GTK3.so /usr/lib/deadbeef/
 fi
 
 if [ -f ${HOME}/.local/lib/deadbeef/ddb_misc_filebrowser.so ]; then

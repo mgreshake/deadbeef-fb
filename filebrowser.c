@@ -3132,7 +3132,7 @@ on_searchbar_timeout ()
 #if GLIB_CHECK_VERSION(2, 28, 0)
     gint64 now = g_get_monotonic_time ();
 #else
-    GTimeVal time_now;
+    GDateTime time_now;
     g_get_current_time (&time_now);
     gint64 now = 1000000L * time_now.tv_sec + time_now.tv_usec;
 #endif
@@ -3179,7 +3179,7 @@ on_searchbar_changed ()
 #if GLIB_CHECK_VERSION(2, 28, 0)
         last_searchbar_change = g_get_monotonic_time ();
 #else
-        GTimeVal time_now;
+        GDateTime time_now;
         g_get_current_time (&time_now);
         last_searchbar_change = 1000000L * time_now.tv_sec + time_now.tv_usec;
 #endif

@@ -51,6 +51,8 @@
 #include <deadbeef/deadbeef.h>
 #include <deadbeef/gtkui_api.h>
 
+#include <FLAC/metadata.h>
+
 #include "config.h"
 #include "filebrowser.h"
 #include "support.h"
@@ -2282,6 +2284,38 @@ get_icon_for_uri (gchar *uri)
     return icon;
 }
 
+/* Get title for selected URI, use filename as fallback */
+static gchar *
+get_title_for_uri (gchar *uri, gchar *fname)
+{
+    gchar *title = NULL;
+    FLAC__StreamMetadata *tags;
+    FLAC__StreamMetadata_VorbisComment_Entry comment;
+
+    if (FLAC__metadata_get_tags (uri, &tags))
+    {
+        for (gint i = 0; i < tags->data.vorbis_comment.num_comments; i++)
+        {
+            comment = tags->data.vorbis_comment.comments[i];
+
+            if (g_strstr_len ((gchar*) comment.entry, comment.length, "TITLE="))
+            {
+                title = g_malloc (comment.length + 1);
+                g_strlcpy (title, (gchar*) comment.entry + 6, comment.length - 5);
+                break;
+            }
+        }
+    }
+
+    // Fallback to filename
+    if (! title)
+        title = fname;
+
+    FLAC__metadata_object_delete (tags);
+
+    return g_strdup (title);
+}
+
 /* Check if row defined by iter is expanded or not */
 static gboolean
 treeview_row_expanded_iter (GtkTreeView *tree_view, GtkTreeIter *iter)
@@ -2468,6 +2502,7 @@ treebrowser_browse (gchar *directory, gpointer parent)
             if (check_hidden (uri))
             {
                 GdkPixbuf *icon = NULL;
+                gchar *title = NULL;
 
                 if (is_dir && check_empty (uri))
                 {
@@ -2503,10 +2538,11 @@ treebrowser_browse (gchar *directory, gpointer parent)
                     if (check_filtered (utf8_name) && check_search (uri))
                     {
                         icon = get_icon_for_uri (uri);
+                        title = get_title_for_uri (uri, fname);
                         gtk_tree_store_append (treestore, &iter, parent);
                         gtk_tree_store_set (treestore, &iter,
                                         TREEBROWSER_COLUMN_ICON,    icon,
-                                        TREEBROWSER_COLUMN_NAME,    fname,
+                                        TREEBROWSER_COLUMN_NAME,    title,
                                         TREEBROWSER_COLUMN_URI,     uri,
                                         TREEBROWSER_COLUMN_TOOLTIP, tooltip,
                                         -1);
@@ -2516,6 +2552,9 @@ treebrowser_browse (gchar *directory, gpointer parent)
 
                 if (icon)
                     g_object_unref (icon);
+
+                if (title)
+                    g_free (title);
             }
 
             g_free (utf8_name);

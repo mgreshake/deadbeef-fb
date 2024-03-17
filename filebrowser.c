@@ -1943,7 +1943,7 @@ add_uri_to_playlist (GList *uri_list, int index, int append, int threaded)
 
     if (index == PLT_CURRENT)
     {
-        plt = deadbeef->plt_get_curr ();
+        plt = deadbeef->plt_get_for_idx (0);
 
         if (! append)
         {

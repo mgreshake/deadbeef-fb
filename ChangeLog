@@ -1,12 +1,78 @@
+commit 3424ec001401223366cb4c522bb1c24c55028170
+Author: Matthias Greshake <mgreshake@uni-osnabrueck.de>
+Date:   Sun Mar 17 13:27:53 2024 +0100
+
+    Add tracks always to default playlist
+
+commit 8ce2e849dd9bc0e03d5c07e8ef42a80c5dbe8c5e
+Author: Matthias Greshake <mgreshake@uni-osnabrueck.de>
+Date:   Sat Mar 16 23:47:22 2024 +0100
+
+    Fix deprecation warning regarding GTimeVal
+
+commit 69354d0cf0ee33c49a52cd5af05c5b8c05cfdae9
+Author: Matthias Greshake <mgreshake@uni-osnabrueck.de>
+Date:   Sat Mar 16 23:45:09 2024 +0100
+
+    Display titles instead of filenames for FLAC in tree view
+
+commit fd3d04f40ee24e6c8faf227d03ffaa405d51cb8f
+Author: Matthias Greshake <mgreshake@uni-osnabrueck.de>
+Date:   Sat Mar 16 23:32:29 2024 +0100
+
+    Change paths in quickinstall scripts to global directory
+
+commit 17accd5345adeb3b81315d284dd81ac881517cc6
+Merge: 355e614 2232972
+Author: zykure <zykure@protonmail.com>
+Date:   Fri Oct 27 09:14:06 2023 +0000
+
+    Merge branch 'errno-fix' into 'master'
+
+    Fix errno redefinition
+
+    Closes #27
+
+    See merge request zykure/deadbeef-fb!10
+
+commit 22329720de7a9bf8d9a0213e0151599356242952
+Author: Vojtech Sokol <sokol.vojtech@gmail.com>
+Date:   Sat Nov 21 01:42:46 2020 +0100
+
+    Fix errno redefinition
+
+commit 355e6142606270e7ae0fd68d8fcdb3f1ada295ca
+Merge: 47bc3fe ca06166
+Author: zykure <zykure@protonmail.com>
+Date:   Mon May 7 17:10:10 2018 +0000
+
+    Merge branch 'master' into 'master'
+
+    Fix corrupted coverarts crashing deadbeef (#19)
+
+    See merge request zykure/deadbeef-fb!6
+
+commit ca061662b68cb502dc8e863b1160b7ea92ee4919
+Author: Dante <dsdante@protonmail.com>
+Date:   Sat Apr 28 19:15:37 2018 +0300
+
+    Fix corrupted coverarts crashing deadbeef (#19)
+
+commit 47bc3fe0fe151dfbb75f90f9e4d5e9a7affd280a
+Author: Jan Behrens <zykure42@gmail.com>
+Date:   Tue Feb 14 17:32:20 2017 +0100
+
+    gtk_menu_popup_at_pointer is availabe in gtk>=3.22
+
 commit 9ad84e1308d8429111760ff31802982aea504657
 Merge: 1562809 fd881f3
 Author: zykure <zykure42@gmail.com>
 Date:   Tue Feb 14 16:22:23 2017 +0000
 
     Merge branch 'master' into 'master'
-    
+
     gtk_menu_popup deprecated
-    
+
     See merge request !5
 
 commit fd881f3e8a30f59a2636817e8314468aa0ea0203
@@ -14,12 +80,12 @@ Author: Guillaume Castagnino <casta@xwing.info>
 Date:   Sat Dec 31 10:24:00 2016 +0100
 
     gtk_menu_popup deprecated
-    
+
     As of gtk-3.22, gtk_menu_popup is deprecated and compilation with it
     generates an error.
     The documentation provides replacement functions:
     https://developer.gnome.org/gtk3/unstable/GtkMenu.html#gtk-menu-popup
-    
+
     Here is my proposal, that seems to do the job.
 
 commit 156280934b790bf260f235522140013a64f9b9fd
@@ -143,14 +209,14 @@ Author: zykure <zykure42@gmail.com>
 Date:   Mon Jan 4 08:29:36 2016 +0000
 
     Merge branch 'fixes' into 'master'
-    
+
     Fixes
-    
+
     Don't do debug printfs in committed code.
-    
+
     Also fix the argument order for gtk_drag_check_threshold so it actually works.
-    
-    
+
+
     See merge request !3
 
 commit e6523218e81bee33f5407dd2fd1823ead39d2775
@@ -194,7 +260,7 @@ Author: Jan Behrens <zykure@web.de>
 Date:   Tue Nov 3 23:07:48 2015 +0100
 
     Fix makerelease.sh and use a more intelligent approach in makeaur.sh
-    
+
     The AUR build will now only download the latest release, not *all* the ones in the release repository.
 
 commit 80f5d3d634b8ac579f180c42dc1d0357c7b2440d
@@ -256,7 +322,7 @@ Author: Jan Behrens <zykure@web.de>
 Date:   Fri Aug 7 15:57:41 2015 +0200
 
     Fix scaling for non-square coverart images; add file icons based on MIME type - fixes #11 + #12
-    
+
     The scaling mode can now be adjusted with a new option: either the height is kept and the width is changed for non-square images, or both width and height are fixed and the image is
     padded accordingly.
 
@@ -279,11 +345,11 @@ Author: zykure <zykure42@gmail.com>
 Date:   Thu Aug 6 12:30:49 2015 +0000
 
     Merge branch 'master' into 'master'
-    
+
     Fix broken build with GTK < 3.16 / additional version checking
-    
+
     Fixed version checking to prevent errors building with GTK < 3.16
-    
+
     See merge request !2
 
 commit 91d94c095d993f00a5f95808cc2e51fc2546f554
@@ -448,7 +514,7 @@ Author: Jan Behrens <zykure@web.de>
 Date:   Mon Jul 20 12:40:56 2015 +0200
 
     Searchbar: improve behavior (do not expand full tree, fix bugs), add search delay (only apply search after some time), add GTK 3.6+ searchbar
-    
+
     Thanks to Tobias and 420MuNkEy for patches/ideas!
 
 commit 7dc4441bd93ba60dbcb8936825d31e8245a953ce
@@ -456,7 +522,7 @@ Author: Tobias Bengfort <tobias.bengfort@gmx.net>
 Date:   Sat Nov 29 19:36:32 2014 +0100
 
     better search
-    
+
     - expand all entries on search
     - collapse all entries on search clear
     - search full filepath
@@ -752,7 +818,7 @@ Author: Jan Behrens <zykure@web.de>
 Date:   Sat Oct 12 16:57:59 2013 +0200
 
     Merge branch 'oldmaster'
-    
+
     Conflicts:
             filebrowser.c
 
